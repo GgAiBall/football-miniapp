@@ -1,5 +1,5 @@
 {
- "updated": "2026-08-28T07:06:41+08:00",
+ "updated": "2026-08-28T07:30:23+08:00",
  "matches": {
   "2041099": {
    "HHAD": {
@@ -12,16 +12,16 @@
     "dSupportRate": "23%",
     "draw": 849,
     "eKey": "h",
-    "eNumber": 1419,
+    "eNumber": 1420,
     "eValue": -26,
     "hErrorState": 2,
     "hProbability": "61%",
     "hSupportRate": "35%",
-    "lose": 1582,
+    "lose": 1584,
     "mid": "2041099",
     "psyError": 2,
     "type": "HHAD",
-    "voteDate": 1787870737000,
+    "voteDate": 1787873049000,
     "win": 1308
    },
    "HAD": {
@@ -34,17 +34,17 @@
     "dSupportRate": "23%",
     "draw": 2110,
     "eKey": "a",
-    "eNumber": 3831,
+    "eNumber": 3833,
     "eValue": 18,
     "hErrorState": 1,
     "hProbability": "35%",
     "hSupportRate": "21%",
-    "lose": 5129,
+    "lose": 5133,
     "mid": "2041099",
     "psyError": 1,
     "type": "HAD",
-    "voteDate": 1787871181000,
-    "win": 1975
+    "voteDate": 1787873343000,
+    "win": 1976
    }
   },
   "2041100": {
@@ -56,19 +56,19 @@
     "dErrorState": 0,
     "dProbability": "26%",
     "dSupportRate": "26%",
-    "draw": 971,
+    "draw": 972,
     "eKey": "h",
-    "eNumber": 2002,
+    "eNumber": 2004,
     "eValue": 21,
     "hErrorState": 2,
     "hProbability": "34%",
     "hSupportRate": "55%",
-    "lose": 694,
+    "lose": 695,
     "mid": "2041100",
     "psyError": 2,
     "type": "HHAD",
-    "voteDate": 1787871269000,
-    "win": 2001
+    "voteDate": 1787873343000,
+    "win": 2003
    },
    "HAD": {
     "aErrorState": 1,
@@ -80,7 +80,7 @@
     "dSupportRate": "8%",
     "draw": 788,
     "eKey": "h",
-    "eNumber": 4117,
+    "eNumber": 4120,
     "eValue": 26,
     "hErrorState": 2,
     "hProbability": "59%",
@@ -89,8 +89,8 @@
     "mid": "2041100",
     "psyError": 2,
     "type": "HAD",
-    "voteDate": 1787871302000,
-    "win": 8909
+    "voteDate": 1787873194000,
+    "win": 8915
    }
   },
   "2041101": {
@@ -102,19 +102,19 @@
     "dErrorState": 0,
     "dProbability": "24%",
     "dSupportRate": "29%",
-    "draw": 938,
+    "draw": 939,
     "eKey": "a",
-    "eNumber": 956,
+    "eNumber": 958,
     "eValue": -18,
     "hErrorState": 1,
     "hProbability": "22%",
     "hSupportRate": "35%",
-    "lose": 1146,
+    "lose": 1148,
     "mid": "2041101",
     "psyError": 1,
     "type": "HHAD",
-    "voteDate": 1787871302000,
-    "win": 1136
+    "voteDate": 1787873366000,
+    "win": 1138
    },
    "HAD": {
     "aErrorState": 1,
@@ -124,19 +124,19 @@
     "dErrorState": 0,
     "dProbability": "27%",
     "dSupportRate": "22%",
-    "draw": 2055,
+    "draw": 2056,
     "eKey": "h",
-    "eNumber": 3152,
+    "eNumber": 3155,
     "eValue": 17,
     "hErrorState": 1,
     "hProbability": "46%",
     "hSupportRate": "63%",
-    "lose": 1450,
+    "lose": 1452,
     "mid": "2041101",
     "psyError": 1,
     "type": "HAD",
-    "voteDate": 1787870273000,
-    "win": 6003
+    "voteDate": 1787873343000,
+    "win": 6009
    }
   },
   "2041102": {
@@ -148,19 +148,19 @@
     "dErrorState": 0,
     "dProbability": "22%",
     "dSupportRate": "24%",
-    "draw": 2311,
+    "draw": 2313,
     "eKey": "h",
-    "eNumber": 4939,
+    "eNumber": 4942,
     "eValue": -26,
     "hErrorState": 2,
     "hProbability": "45%",
     "hSupportRate": "19%",
-    "lose": 5550,
+    "lose": 5553,
     "mid": "2041102",
     "psyError": 2,
     "type": "HHAD",
-    "voteDate": 1787871272000,
-    "win": 1830
+    "voteDate": 1787873343000,
+    "win": 1831
    },
    "HAD": {
     "aErrorState": 1,
@@ -172,16 +172,16 @@
     "dSupportRate": "2%",
     "draw": 533,
     "eKey": "a",
-    "eNumber": 5134,
+    "eNumber": 5135,
     "eValue": 19,
     "hErrorState": 0,
     "hProbability": "10%",
     "hSupportRate": "4%",
-    "lose": 21526,
+    "lose": 21531,
     "mid": "2041102",
     "psyError": 1,
     "type": "HAD",
-    "voteDate": 1787871181000,
+    "voteDate": 1787873343000,
     "win": 839
    }
   },
@@ -196,7 +196,7 @@
     "dSupportRate": "31%",
     "draw": 656,
     "eKey": "a",
-    "eNumber": 976,
+    "eNumber": 978,
     "eValue": -23,
     "hErrorState": 1,
     "hProbability": "28%",
@@ -205,30 +205,30 @@
     "mid": "2041103",
     "psyError": 2,
     "type": "HHAD",
-    "voteDate": 1787871275000,
-    "win": 1018
+    "voteDate": 1787873249000,
+    "win": 1021
    },
    "HAD": {
     "aErrorState": 0,
     "aProbability": "18%",
-    "aSupportRate": "10%",
-    "absValue": 24,
+    "aSupportRate": "9%",
+    "absValue": 25,
     "dErrorState": 1,
     "dProbability": "27%",
     "dSupportRate": "11%",
     "draw": 642,
     "eKey": "h",
-    "eNumber": 2285,
-    "eValue": 24,
+    "eNumber": 2382,
+    "eValue": 25,
     "hErrorState": 2,
     "hProbability": "55%",
-    "hSupportRate": "79%",
+    "hSupportRate": "80%",
     "lose": 556,
     "mid": "2041103",
     "psyError": 2,
     "type": "HAD",
-    "voteDate": 1787870768000,
-    "win": 4643
+    "voteDate": 1787873215000,
+    "win": 4647
    }
   },
   "2041104": {
@@ -242,17 +242,17 @@
     "dSupportRate": "26%",
     "draw": 661,
     "eKey": "a",
-    "eNumber": 782,
+    "eNumber": 783,
     "eValue": -13,
     "hErrorState": 1,
     "hProbability": "39%",
     "hSupportRate": "50%",
-    "lose": 617,
+    "lose": 618,
     "mid": "2041104",
     "psyError": 1,
     "type": "HHAD",
-    "voteDate": 1787867673000,
-    "win": 1282
+    "voteDate": 1787873343000,
+    "win": 1283
    },
    "HAD": {
     "aErrorState": 0,
@@ -262,42 +262,42 @@
     "dErrorState": 1,
     "dProbability": "21%",
     "dSupportRate": "9%",
-    "draw": 543,
+    "draw": 544,
     "eKey": "h",
-    "eNumber": 1830,
+    "eNumber": 1832,
     "eValue": 20,
     "hErrorState": 1,
     "hProbability": "61%",
     "hSupportRate": "81%",
-    "lose": 676,
+    "lose": 677,
     "mid": "2041104",
     "psyError": 1,
     "type": "HAD",
-    "voteDate": 1787871181000,
-    "win": 5049
+    "voteDate": 1787873343000,
+    "win": 5052
    }
   },
   "2041105": {
    "HHAD": {
     "aErrorState": 0,
     "aProbability": "23%",
-    "aSupportRate": "32%",
-    "absValue": 12,
+    "aSupportRate": "33%",
+    "absValue": 13,
     "dErrorState": 0,
     "dProbability": "23%",
     "dSupportRate": "26%",
-    "draw": 359,
+    "draw": 360,
     "eKey": "h",
-    "eNumber": 271,
-    "eValue": -12,
+    "eNumber": 295,
+    "eValue": -13,
     "hErrorState": 1,
     "hProbability": "54%",
-    "hSupportRate": "42%",
-    "lose": 437,
+    "hSupportRate": "41%",
+    "lose": 439,
     "mid": "2041105",
     "psyError": 1,
     "type": "HHAD",
-    "voteDate": 1787864461000,
+    "voteDate": 1787873343000,
     "win": 566
    },
    "HAD": {
@@ -319,8 +319,8 @@
     "mid": "2041105",
     "psyError": 0,
     "type": "HAD",
-    "voteDate": 1787870582000,
-    "win": 822
+    "voteDate": 1787872904000,
+    "win": 823
    }
   },
   "2041106": {
@@ -332,19 +332,19 @@
     "dErrorState": 0,
     "dProbability": "20%",
     "dSupportRate": "23%",
-    "draw": 5867,
+    "draw": 5868,
     "eKey": "a",
-    "eNumber": 18802,
+    "eNumber": 18808,
     "eValue": -34,
     "hErrorState": 2,
     "hProbability": "39%",
     "hSupportRate": "70%",
-    "lose": 1832,
+    "lose": 1833,
     "mid": "2041106",
     "psyError": 2,
     "type": "HHAD",
-    "voteDate": 1787871388000,
-    "win": 18022
+    "voteDate": 1787873343000,
+    "win": 18028
    },
    "HAD": {
     "aErrorState": 0,
@@ -356,17 +356,17 @@
     "dSupportRate": "2%",
     "draw": 835,
     "eKey": "h",
-    "eNumber": 9085,
+    "eNumber": 9087,
     "eValue": 20,
     "hErrorState": 1,
     "hProbability": "76%",
     "hSupportRate": "96%",
-    "lose": 764,
+    "lose": 765,
     "mid": "2041106",
     "psyError": 1,
     "type": "HAD",
-    "voteDate": 1787871302000,
-    "win": 37226
+    "voteDate": 1787873206000,
+    "win": 37232
    }
   },
   "2041107": {
@@ -378,9 +378,9 @@
     "dErrorState": 1,
     "dProbability": "26%",
     "dSupportRate": "13%",
-    "draw": 2500,
+    "draw": 2501,
     "eKey": "h",
-    "eNumber": 15807,
+    "eNumber": 15809,
     "eValue": 40,
     "hErrorState": 2,
     "hProbability": "44%",
@@ -389,8 +389,8 @@
     "mid": "2041107",
     "psyError": 2,
     "type": "HHAD",
-    "voteDate": 1787871302000,
-    "win": 16539
+    "voteDate": 1787872969000,
+    "win": 16541
    },
    "HAD": {
     "aErrorState": 0,
@@ -402,17 +402,17 @@
     "dSupportRate": "3%",
     "draw": 898,
     "eKey": "h",
-    "eNumber": 11131,
+    "eNumber": 11134,
     "eValue": 27,
     "hErrorState": 2,
     "hProbability": "68%",
     "hSupportRate": "95%",
-    "lose": 666,
+    "lose": 667,
     "mid": "2041107",
     "psyError": 2,
     "type": "HAD",
-    "voteDate": 1787871302000,
-    "win": 30149
+    "voteDate": 1787873206000,
+    "win": 30156
    }
   },
   "2041108": {
@@ -424,19 +424,19 @@
     "dErrorState": 0,
     "dProbability": "25%",
     "dSupportRate": "18%",
-    "draw": 2590,
+    "draw": 2592,
     "eKey": "a",
-    "eNumber": 14916,
+    "eNumber": 14924,
     "eValue": 39,
     "hErrorState": 2,
     "hProbability": "43%",
     "hSupportRate": "11%",
-    "lose": 9925,
+    "lose": 9928,
     "mid": "2041108",
     "psyError": 2,
     "type": "HHAD",
-    "voteDate": 1787871180000,
-    "win": 1546
+    "voteDate": 1787872995000,
+    "win": 1549
    },
    "HAD": {
     "aErrorState": 2,
@@ -448,17 +448,17 @@
     "dSupportRate": "7%",
     "draw": 2033,
     "eKey": "a",
-    "eNumber": 14773,
+    "eNumber": 14777,
     "eValue": 31,
     "hErrorState": 1,
     "hProbability": "20%",
     "hSupportRate": "5%",
-    "lose": 27299,
+    "lose": 27304,
     "mid": "2041108",
     "psyError": 2,
     "type": "HAD",
-    "voteDate": 1787871399000,
-    "win": 1414
+    "voteDate": 1787872922000,
+    "win": 1416
    }
   },
   "2041109": {
@@ -472,16 +472,16 @@
     "dSupportRate": "22%",
     "draw": 2982,
     "eKey": "a",
-    "eNumber": 9475,
+    "eNumber": 9477,
     "eValue": 28,
     "hErrorState": 2,
     "hProbability": "39%",
     "hSupportRate": "14%",
-    "lose": 8639,
+    "lose": 8642,
     "mid": "2041109",
     "psyError": 2,
     "type": "HHAD",
-    "voteDate": 1787871461000,
+    "voteDate": 1787872922000,
     "win": 1914
    },
    "HAD": {
@@ -492,19 +492,19 @@
     "dErrorState": 1,
     "dProbability": "22%",
     "dSupportRate": "8%",
-    "draw": 2380,
+    "draw": 2381,
     "eKey": "a",
-    "eNumber": 10821,
+    "eNumber": 10824,
     "eValue": 25,
     "hErrorState": 1,
     "hProbability": "18%",
     "hSupportRate": "7%",
-    "lose": 24937,
+    "lose": 24943,
     "mid": "2041109",
     "psyError": 2,
     "type": "HAD",
-    "voteDate": 1787871302000,
-    "win": 1929
+    "voteDate": 1787873343000,
+    "win": 1930
    }
   },
   "2041110": {
@@ -523,11 +523,11 @@
     "hErrorState": 0,
     "hProbability": "17%",
     "hSupportRate": "22%",
-    "lose": 1092,
+    "lose": 1093,
     "mid": "2041110",
     "psyError": 0,
     "type": "HHAD",
-    "voteDate": 1787871423000,
+    "voteDate": 1787871663000,
     "win": 434
    },
    "HAD": {
@@ -549,8 +549,8 @@
     "mid": "2041110",
     "psyError": 0,
     "type": "HAD",
-    "voteDate": 1787871302000,
-    "win": 1378
+    "voteDate": 1787871962000,
+    "win": 1379
    }
   },
   "2041111": {
@@ -564,16 +564,16 @@
     "dSupportRate": "12%",
     "draw": 1062,
     "eKey": "a",
-    "eNumber": 5343,
+    "eNumber": 5344,
     "eValue": 34,
     "hErrorState": 2,
     "hProbability": "26%",
     "hSupportRate": "3%",
-    "lose": 7613,
+    "lose": 7615,
     "mid": "2041111",
     "psyError": 2,
     "type": "HHAD",
-    "voteDate": 1787871303000,
+    "voteDate": 1787872056000,
     "win": 304
    },
    "HAD": {
@@ -586,16 +586,16 @@
     "dSupportRate": "3%",
     "draw": 500,
     "eKey": "a",
-    "eNumber": 3773,
+    "eNumber": 3774,
     "eValue": 20,
     "hErrorState": 0,
     "hProbability": "10%",
     "hSupportRate": "4%",
-    "lose": 14509,
+    "lose": 14515,
     "mid": "2041111",
     "psyError": 1,
     "type": "HAD",
-    "voteDate": 1787871180000,
+    "voteDate": 1787873343000,
     "win": 582
    }
   },
@@ -610,17 +610,17 @@
     "dSupportRate": "28%",
     "draw": 894,
     "eKey": "h",
-    "eNumber": 942,
+    "eNumber": 943,
     "eValue": -19,
     "hErrorState": 1,
     "hProbability": "57%",
     "hSupportRate": "38%",
-    "lose": 1066,
+    "lose": 1067,
     "mid": "2041112",
     "psyError": 1,
     "type": "HHAD",
-    "voteDate": 1787867461000,
-    "win": 1219
+    "voteDate": 1787871962000,
+    "win": 1220
    },
    "HAD": {
     "aErrorState": 1,
@@ -632,17 +632,17 @@
     "dSupportRate": "25%",
     "draw": 2095,
     "eKey": "a",
-    "eNumber": 2588,
+    "eNumber": 2589,
     "eValue": 15,
     "hErrorState": 1,
     "hProbability": "31%",
     "hSupportRate": "18%",
-    "lose": 4629,
+    "lose": 4630,
     "mid": "2041112",
     "psyError": 1,
     "type": "HAD",
-    "voteDate": 1787871180000,
-    "win": 1492
+    "voteDate": 1787873365000,
+    "win": 1493
    }
   }
  }
