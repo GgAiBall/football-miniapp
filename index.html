@@ -86,6 +86,33 @@ main{padding:12px}
 input[readonly]{background:#eef2ee;color:#555}
 .togg{font-size:11px;color:var(--green2);text-decoration:underline;cursor:pointer;margin-top:4px;display:inline-block}
 .emptymatch{text-align:center;color:var(--sub);font-size:13px;padding:20px 0}
+/* ===== 比赛详情增强：玩法网格 + 投注占比 ===== */
+.modal-title{font-size:18px;font-weight:800;text-align:center;color:var(--green);margin:2px 0 2px}
+.modal-sub{text-align:center;color:var(--sub);font-size:12px;margin-bottom:4px}
+.blk{border:1px solid var(--line);border-radius:10px;padding:10px;margin:10px 0}
+.blk-title{font-size:13px;font-weight:700;color:var(--green);margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+.blk-title .tag{font-size:11px;color:var(--sub);font-weight:500}
+.pick3{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.pick3 .p{text-align:center;border:1.5px solid var(--line);border-radius:8px;padding:7px 4px;font-size:12px}
+.pick3 .p b{display:block;font-size:17px;color:var(--txt)}
+.pick3 .p .lb{font-size:11px;color:var(--sub)}
+.pick3 .p.h{background:#eaf7ee;border-color:var(--green2)}
+.pick3 .p.d{background:#fdf6e0;border-color:#e0c34a}
+.pick3 .p.a{background:#eef3fb;border-color:var(--blue)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+.cell{display:flex;justify-content:space-between;align-items:center;border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:12.5px}
+.cell b{font-size:13px;color:var(--green)}
+.cell.h b{color:var(--red)}.cell.d b{color:#8a6d00}.cell.a b{color:var(--blue)}
+.vote{position:relative;background:#f2f5f2;border-radius:6px;height:26px;display:flex;overflow:hidden;margin:4px 0 6px}
+.vote i{display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden}
+.vrate{display:flex;justify-content:space-between;font-size:12px;color:var(--sub)}
+.vrate .h{color:var(--red)}.vrate .d{color:#8a6d00}.vrate .a{color:var(--blue)}
+.vmeta{font-size:11px;color:var(--sub);margin-top:6px;text-align:right}
+.loading{color:var(--sub);font-size:13px;text-align:center;padding:6px 0}
+.scroll-x{overflow-x:auto;white-space:nowrap;padding-bottom:4px}
+.cr-row{display:flex;flex-direction:column;gap:6px;margin-bottom:6px}
+.cr-lab{font-size:11px;color:var(--sub);margin:2px 0 0}
 </style>
 </head>
 <body>
@@ -192,7 +219,7 @@ async function apiFetch(url){
   return await r.json();
 }
 async function fetchAllMatches(){
-  const data = await apiFetch('https://webapi.sporttery.cn/gateway/uniform/football/getMatchCalculatorV1.qry?channel=1&poolCode=hhad,had,crs');
+  const data = await apiFetch('https://webapi.sporttery.cn/gateway/uniform/football/getMatchCalculatorV1.qry?channel=1&poolCode=hhad,had,crs,hafu,ttg');
   if(data.errorCode!=='0'||!data.value) throw new Error(data.errorMessage||'获取失败');
   const out=[];
   for(const m of data.value.matchInfoList||[]){
@@ -209,11 +236,37 @@ async function fetchAllMatches(){
         homeRank:s.homeRank||'', awayRank:s.awayRank||'',
         win:parseFloat(had.h)||0, draw:parseFloat(had.d)||0, lose:parseFloat(had.a)||0,
         handicap:parseFloat(hhad.goalLine)||0,
-        homeTeamId:s.homeTeamId||'', awayTeamId:s.awayTeamId||''
+        homeTeamId:s.homeTeamId||'', awayTeamId:s.awayTeamId||'',
+        had:had, hhad:hhad, crs:s.crs||{}, hafu:s.hafu||{}, ttg:s.ttg||{}
       });
     }
   }
   return out;
+}
+
+// 批量拉取投注资金占比（竞彩支持率）
+async function fetchSupportRates(ids){
+  const map={};
+  if(!ids||!ids.length) return map;
+  // 优先读静态 support.json（GitHub Actions 自动更新，同源无 CORS 限制）
+  try{
+    const r=await fetch('./support.json?v='+Date.now());
+    if(r.ok){
+      const j=await r.json();
+      for(const k in (j.matches||{})) map[k]=j.matches[k];
+      // 静态数据缺失的场次(如新增)，尝试直连竞彩接口兑底
+      const missing=ids.filter(id=>!map[id]);
+      if(missing.length){
+        const CH=30;
+        for(let i=0;i<missing.length;i+=CH){
+          const chunk=missing.slice(i,i+CH);
+          const url='https://webapi.sporttery.cn/gateway/jc/common/getSupportRateV1.qry?matchIds='+chunk.join(',')+'&poolCode=hhad,had&sportType=1';
+          try{ const data=await apiFetch(url); if(data&&data.value){ for(const k in data.value) map[k.replace(/^_/,'')]=data.value[k]; } }catch(e){}
+        }
+      }
+    }
+  }catch(e){ /* 静态文件不可用时静默，交由调用方处理 */ }
+  return map;
 }
 
 let lastApiMatches=[];
@@ -222,6 +275,8 @@ async function doSync(msg){
   try{
     const list=await fetchAllMatches();
     lastApiMatches=list;
+    // 批量拉取投注占比（失败不阻断列表展示）
+    try{ const sup=await fetchSupportRates(list.map(x=>x.id)); list.forEach(x=>x.support=sup[x.id]||null); }catch(e){}
     renderApiList(list);
     toast('✅ 获取到 '+list.length+' 场比赛');
     subbar.textContent='已同步 '+new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'});
@@ -247,6 +302,7 @@ function renderApiList(list){
         <div class="oc dr"><b>${m.draw||'-'}</b>平</div>
         <div class="oc lose"><b>${m.lose||'-'}</b>客胜</div>
       </div>
+      ${m.support&&m.support.HAD?`<div style="font-size:11px;color:var(--sub);margin-top:6px">投注占比：<span style="color:var(--red)">主${m.support.HAD.hSupportRate||'--'}</span> / <span style="color:#8a6d00">平${m.support.HAD.dSupportRate||'--'}</span> / <span style="color:var(--blue)">客${m.support.HAD.aSupportRate||'--'}</span></div>`:''}
       ${saved?'<span class="pick">✓ 已收藏到记录库</span>':'<span class="pick" onclick="event.stopPropagation();saveFromApi(\''+m.id+'\')">＋ 收藏记录</span>'}
     </div>`;
   }).join('');
@@ -267,35 +323,146 @@ function saveFromApi(id){
 }
 
 function showMatchDetail(m){
-  const p=D.pred[m.id], r=D.result[m.id];
   const body=$('modalBody');
+  const p=D.pred[m.id], r=D.result[m.id];
+  const had=m.had||{}, hhad=m.hhad||{};
+  const hc = (hhad.goalLine!==undefined&&hhad.goalLine!=='')?('让'+hhad.goalLine):'';
   body.innerHTML=`
-    <div style="text-align:center;margin-bottom:12px">
-      <div style="font-size:18px;font-weight:700">${esc(m.league)}</div>
-      <div style="font-size:16px;margin:8px 0">${esc(m.home)} <b style="color:var(--gold)">vs</b> ${esc(m.away)}</div>
-      <div class="badge">${esc(m.date||'')} ${esc(m.time||'')}</div>
+    <div class="modal-title">${esc(m.league)}</div>
+    <div class="modal-sub">${esc(m.home)} <b style="color:var(--gold)">VS</b> ${esc(m.away)}</div>
+    <div class="modal-sub">${esc(m.date||'')} ${esc(m.time||'')}${(m.homeRank||m.awayRank)?(' · 主排'+esc(m.homeRank||'-')+'/客排'+esc(m.awayRank||'-')):''}</div>
+    <div id="supportBox"></div>
+    <div class="blk"><div class="blk-title">胜平负 <span class="tag">HAD</span></div>
+      <div class="pick3">
+        <div class="p h"><b>${had.h!=null?had.h:'-'}</b><div class="lb">主胜</div></div>
+        <div class="p d"><b>${had.d!=null?had.d:'-'}</b><div class="lb">平</div></div>
+        <div class="p a"><b>${had.a!=null?had.a:'-'}</b><div class="lb">客胜</div></div>
+      </div>
+      ${oddsTime(had)}
     </div>
-    <div class="odds" style="margin-bottom:12px">
-      <div class="oc win"><b>${m.win||'-'}</b>主胜</div>
-      <div class="oc dr"><b>${m.draw||'-'}</b>平</div>
-      <div class="oc lose"><b>${m.lose||'-'}</b>客胜</div>
+    <div class="blk"><div class="blk-title">让球胜平负 <span class="tag">HHAD ${hc}</span></div>
+      <div class="pick3">
+        <div class="p h"><b>${hhad.h!=null?hhad.h:'-'}</b><div class="lb">让球主胜</div></div>
+        <div class="p d"><b>${hhad.d!=null?hhad.d:'-'}</b><div class="lb">让球平</div></div>
+        <div class="p a"><b>${hhad.a!=null?hhad.a:'-'}</b><div class="lb">让球客胜</div></div>
+      </div>
+      ${oddsTime(hhad)}
     </div>
-    <div class="sec">我的预测</div>
-    <div class="field"><label>预测（主胜/平/客胜）</label><div class="row" style="gap:6px">
-      <button class="btn ghost" onclick="setPred('${m.id}','H',this)">主胜</button>
-      <button class="btn ghost" onclick="setPred('${m.id}','D',this)">平</button>
-      <button class="btn ghost" onclick="setPred('${m.id}','A',this)">客胜</button>
-    </div></div>
-    <div id="mypick" class="pick pred" style="margin:0 0 12px"></div>
-    <div class="sec">赛果录入（回测）</div>
-    <div class="field"><label>比分（主-客，如 2-1）</label><input id="inScore" placeholder="例：2-1" value="${r?r.score:''}"></div>
-    <div class="row" style="gap:6px;margin-bottom:14px">
-      <button class="btn" onclick="saveResult('${m.id}')">✔ 保存赛果并回测</button>
-      <button class="btn ghost" onclick="closeModal()">关闭</button>
+    <div class="blk"><div class="blk-title">比分（波胆） <span class="tag">CRS · 主-客</span></div>
+      <div id="crsBox">${renderCrs(m.crs)}</div>
+      ${oddsTime(m.crs)}
+    </div>
+    <div class="blk"><div class="blk-title">半全场 <span class="tag">HAFU · 半场/全场</span></div>
+      <div id="hafuBox">${renderHafu(m.hafu)}</div>
+    </div>
+    <div class="blk"><div class="blk-title">总进球 <span class="tag">TTG</span></div>
+      <div class="scroll-x" id="ttgBox">${renderTtg(m.ttg)}</div>
+    </div>
+    <div class="blk">
+      <div class="blk-title">我的预测 / 赛果回测</div>
+      <div class="field"><label>预测（主胜/平/客胜）</label><div class="row" style="gap:6px">
+        <button class="btn ghost" onclick="setPred('${m.id}','H',this)">主胜</button>
+        <button class="btn ghost" onclick="setPred('${m.id}','D',this)">平</button>
+        <button class="btn ghost" onclick="setPred('${m.id}','A',this)">客胜</button>
+      </div></div>
+      <div id="mypick" class="pick pred" style="margin:0 0 10px"></div>
+      <div class="field"><label>赛果比分（主-客，如 2-1）</label><input id="inScore" placeholder="例：2-1" value="${r?r.score:''}"></div>
+      <div class="row" style="gap:6px;margin-top:6px">
+        <button class="btn" onclick="saveResult('${m.id}')">✔ 保存赛果并回测</button>
+        <button class="btn ghost" onclick="closeModal()">关闭</button>
+      </div>
     </div>
   `;
   renderPred(m.id);
+  renderSupportHtml('supportBox',m.support||null,m);
   showModal();
+}
+
+/* ============ 投注资金占比（竞彩支持率） ============ */
+function renderSupportHtml(boxId,sup,m){
+  const box=$(boxId); if(!box) return;
+  const base='<div class="blk"><div class="blk-title">💰 投注资金占比 <span class="tag">竞彩支持率</span></div>';
+  if(!sup||(!sup.HAD&&!sup.HHAD)){
+    box.innerHTML=base+`<div class="loading">暂无投注占比数据
+      <button class="btn ghost" style="padding:4px 8px;font-size:12px;display:inline;width:auto;margin-left:4px" onclick="refreshSupport('${m.id}')">刷新</button></div></div>`;
+    return;
+  }
+  const ratebar=(t)=>{
+    if(!t) return '';
+    const hs=parseFloat(t.hSupportRate)||0, ds=parseFloat(t.dSupportRate)||0, as=parseFloat(t.aSupportRate)||0;
+    const hp=t.hProbability||'', dp=t.dProbability||'', ap=t.aProbability||'';
+    const tot=(hs+ds+as)||1;
+    return `<div class="vote">
+        <i style="width:${(hs/tot*100).toFixed(1)}%;background:var(--red)">${hs||''}</i>
+        <i style="width:${(ds/tot*100).toFixed(1)}%;background:#c9a227">${ds||''}</i>
+        <i style="width:${(as/tot*100).toFixed(1)}%;background:var(--blue)">${as||''}</i>
+      </div>
+      <div class="vrate">
+        <span class="h">主胜 ${hs}${hp?'（概率'+hp+'）':''}</span>
+        <span class="d">平 ${ds}${dp?'（'+dp+'）':''}</span>
+        <span class="a">客胜 ${as}${ap?'（'+ap+'）':''}</span>
+      </div>`;
+  };
+  let html=base;
+  if(sup.HAD) html+=`<div class="cr-lab">胜平负（HAD）</div>`+ratebar(sup.HAD);
+  if(sup.HHAD) html+=`<div class="cr-lab" style="margin-top:8px">让球胜平负（HHAD${m.handicap?(' 让'+m.handicap):''}）</div>`+ratebar(sup.HHAD);
+  const vt=(sup.HAD&&sup.HAD.voteDate)||(sup.HHAD&&sup.HHAD.voteDate);
+  html+=`<div class="vmeta">数据更新 ${
+    vt?new Date(Number(vt)).toLocaleString('zh-CN',{hour:'2-digit',minute:'2-digit'}):'--'
+  }
+    <button class="btn ghost" style="padding:2px 8px;font-size:11px;display:inline;width:auto;margin-left:6px" onclick="refreshSupport('${m.id}')">刷新</button></div></div>`;
+  box.innerHTML=html;
+}
+async function refreshSupport(id){
+  const m=lastApiMatches.find(x=>x.id===id); if(!m) return;
+  const box=$('supportBox'); if(box) box.innerHTML='<div class="blk"><div class="blk-title">💰 投注资金占比</div><div class="loading">加载中…</div></div>';
+  try{
+    const sup=await fetchSupportRates([id]);
+    m.support=sup[id]||null;
+    const sp=$('supportBox'); if(sp) renderSupportHtml('supportBox',m.support,m);
+  }catch(e){ const sp=$('supportBox'); if(sp) renderSupportHtml('supportBox',null,m); }
+}
+
+/* ============ 玩法解析辅助 ============ */
+function oddsTime(o){ return (o&&o.updateTime)?`<div class="cr-lab">赔率更新 ${o.updateDate||''} ${o.updateTime}</div>`:''; }
+const HAFUMAP={h:'主胜',d:'平',a:'客胜'};
+function renderCrs(crs){
+  if(!crs) return '<div class="loading">比分玩法未开售</div>';
+  const rows={H:[],D:[],A:[]};
+  for(const k in crs){
+    const m2=k.match(/^s(\d+)s(\d+)$/); if(!m2) continue;
+    const v=parseFloat(crs[k]); if(!v) continue;
+    const hg=+m2[1], ag=+m2[2];
+    rows[hg>ag?'H':hg===ag?'D':'A'].push({label:hg+':'+ag,v});
+  }
+  const pick=arr=>{
+    const s=arr.slice().sort((a,b)=>a.v-b.v).slice(0,8);
+    return s.map(x=>`<div class="cell ${x.label.split(':')[0]>x.label.split(':')[1]?'h':x.label.split(':')[0]===x.label.split(':')[1]?'d':'a'}"><span>${x.label}</span><b>${x.v}</b></div>`).join('');
+  };
+  const lab={H:'主胜',D:'平局',A:'客胜'};
+  let html='';
+  for(const g of ['H','D','A']){
+    if(!rows[g].length) continue;
+    html+=`<div class="cr-row"><div class="cr-lab">${lab[g]}</div><div class="grid3">${pick(rows[g])}</div></div>`;
+  }
+  return html||'<div class="loading">比分玩法未开售</div>';
+}
+function renderHafu(hafu){
+  if(!hafu) return '<div class="loading">半全场未开售</div>';
+  const cells=['hh','hd','ha','dh','dd','da','ah','ad','aa'].filter(k=>parseFloat(hafu[k])).map(k=>{
+    const v=parseFloat(hafu[k]);
+    const cls=k[0]==='h'?'h':k[0]==='d'?'d':'a';
+    return `<div class="cell ${cls}"><span>${HAFUMAP[k[0]]}/${HAFUMAP[k[1]]}</span><b>${v}</b></div>`;
+  });
+  return cells.length?`<div class="grid3">${cells.join('')}</div>`:'<div class="loading">半全场未开售</div>';
+}
+function renderTtg(ttg){
+  if(!ttg) return '<div class="loading">总进球未开售</div>';
+  const cells=[0,1,2,3,4,5,6,7].filter(i=>parseFloat(ttg['s'+i])).map(i=>{
+    const v=parseFloat(ttg['s'+i]);
+    return `<div class="cell" style="display:inline-flex;margin-right:6px"><span>${i===7?'7+':i}球</span><b>${v}</b></div>`;
+  });
+  return cells.length?cells.join(''):'<div class="loading">总进球未开售</div>';
 }
 function setPred(id,choice,btn){
   const m=lastApiMatches.find(x=>x.id===id); if(!m) return;
@@ -617,6 +784,7 @@ window.addEventListener('beforeunload',save);
 /* 初始化 */
 switchTo('v-home');
 renderApiList(lastApiMatches);
+doSync();  // 进入自动拉取今日真实赛程 + 投注资金占比
 </script>
 </body>
 </html>
