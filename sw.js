@@ -1,5 +1,5 @@
 /* 足球记录分析 PWA Service Worker - 离线缓存核心资源 */
-const CACHE = 'football-miniapp-v2';
+const CACHE = 'football-miniapp-v3';
 const CORE = ['./', './index.html', './manifest.json', './icons/icon-192.png', './icons/icon-512.png'];
 
 self.addEventListener('install', (e) => {

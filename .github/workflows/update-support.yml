@@ -27,11 +27,11 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add support.json
+          git add support.json odds_history.json
           if git diff --cached --quiet; then
-            echo "support.json 无变化, 跳过推送"
+            echo "数据无变化, 跳过推送"
           else
-            git commit -m "chore: update support rate data"
+            git commit -m "chore: update support & odds history data"
             git push
             echo "已推送, 将触发 Pages 重新部署"
           fi
