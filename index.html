@@ -310,6 +310,26 @@ function toast(t){ const el=$('toast'); el.textContent=t; el.classList.add('show
 
 function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 
+function apiVerdict(m){
+  const hv=parseFloat(m.win),dv=parseFloat(m.draw),av=parseFloat(m.lose);
+  if(!(hv>1&&av>1)) return '';
+  const ih=1/hv, id=dv>1?1/dv:(1/3), ia=1/av;
+  let s=ih+id+ia;
+  let pH=ih/s*100,pD=id/s*100,pA=ia/s*100;
+  const sup=m.support&&m.support.HAD;
+  if(sup){
+    const sh=parseFloat(sup.hSupportRate)||0,sd=parseFloat(sup.dSupportRate)||0,sa=parseFloat(sup.aSupportRate)||0,ss=sh+sd+sa;
+    if(ss>0){
+      const wH=pH*0.85+(sh/ss)*100*0.15, wD=pD*0.85+(sd/ss)*100*0.15, wA=pA*0.85+(sa/ss)*100*0.15, wt=wH+wD+wA;
+      pH=wH/wt*100;pD=wD/wt*100;pA=wA/wt*100;
+    }
+  }
+  const r0=Math.round;
+  let ch='D',cp=pD;
+  if(pH>=pD&&pH>=pA){ch='H';cp=pH;} else if(pA>=pD&&pA>pH){ch='A';cp=pA;}
+  const name={H:'主胜',D:'平',A:'客胜'}[ch];
+  return `<div style="margin-top:6px;padding:7px 9px;background:#eaf4ee;border:1px solid #cfe3d6;border-radius:8px;font-size:12px;line-height:1.5">🤖 <b>AI自动分析</b>：倾向 <b style="color:#0a6b3a">${name} ${r0(cp)}%</b> · 主${r0(pH)}% / 平${r0(pD)}% / 客${r0(pA)}%</div>`;
+}
 function renderApiList(list){
   const box=$('apiList');
   if(!list.length){ box.innerHTML='<div class="emptymatch">暂无开售比赛，或今日无竞彩场次。<br>可在下方"快速录入"手工添加。</div>'; return; }
@@ -324,6 +344,7 @@ function renderApiList(list){
         <div class="oc lose"><b>${m.lose||'-'}</b>客胜</div>
       </div>
       ${m.support&&m.support.HAD?`<div style="font-size:11px;color:var(--sub);margin-top:6px">投注占比：<span style="color:var(--red)">主${m.support.HAD.hSupportRate||'--'}</span> / <span style="color:#8a6d00">平${m.support.HAD.dSupportRate||'--'}</span> / <span style="color:var(--blue)">客${m.support.HAD.aSupportRate||'--'}</span></div>`:''}
+      ${apiVerdict(m)}
       <div class="row" style="gap:6px;margin-top:8px">
         <button class="btn" style="flex:1;padding:9px" onclick="event.stopPropagation();showPrediction(lastApiMatches.find(x=>x.id==='${m.id}')||m)">🔮 直接分析</button>
         ${saved?'<span class="pick" style="align-self:center;flex:1;text-align:center">✓ 已收藏</span>':'<button class="btn ghost" style="flex:1;padding:9px" onclick="event.stopPropagation();saveFromApi(\''+m.id+'\')">＋ 收藏</button>'}
