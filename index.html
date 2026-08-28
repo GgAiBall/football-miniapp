@@ -873,6 +873,9 @@ function saveRecent(h,a){
 }
 function quickAnalyze(id){
   const m=D.matches.find(x=>x.id===id); if(!m) return;
+  const apiM=lastApiMatches.find(x=>x.id===m.id);
+  // 竞彩来源(含赔率历史/投注占比)→ 一键自动分析
+  if(apiM||m.support){ showPrediction(apiM||m); return; }
   switchTo('v-analyze'); renderAnalyze(m.home,m.away,m);
 }
 function renderTeams(){
@@ -927,14 +930,51 @@ function miAdj(mi){
   const hc=mi.handicap||'';
   if(/主(让|-|受让)?[\d.]+/.test(hc)){ adjW+=0.04; factors.push({t:'盘口/赔率倾向主队（'+(hc||'')+'）',dir:'主胜'}); }
   else if(/客(让|[-\d])/.test(hc)){ adjA+=0.04; factors.push({t:'盘口/赔率倾向客队（'+(hc||'')+'）',dir:'客胜'}); }
-  return {adjW,adjA,factors,has:true};
+  return {adjW,adjA,factors,has: !!(mi.injuryH||mi.injuryA||mi.xgH||mi.xgA||mi.handicap||mi.note||mi.view)};
 }
 function renderAnalyze(home,away,m){
   const hs=teamScore(home,true), as=teamScore(away,false);
   const body=$('teamRecent');
   if(!hs||!as){
-    body.innerHTML=`<div class="card"><div class="sec">${esc(home)} vs ${esc(away)}</div><div class="list-empty">缺少近期数据，无法分析。<br>请先补充两队近期战绩。</div>
-      <button class="btn ghost" onclick="editRecent('${esc(home)}','${esc(away)}')">📈 补充近期数据</button></div>`;
+    // 有赔率 → 自动用赔率(+投注占比+补充信息)分析, 不再要求手动补数据
+    if(m && (parseFloat(m.win)>1||parseFloat(m.lose)>1||(m.support&&m.support.HAD))){
+      let oW=parseFloat(m.win)?1/parseFloat(m.win):1/3, oD=parseFloat(m.draw)?1/parseFloat(m.draw):1/3, oA=parseFloat(m.lose)?1/parseFloat(m.lose):1/3;
+      const s=oW+oD+oA; oW/=s; oD/=s; oA/=s;
+      let supProbs=null;
+      if(m.support&&m.support.HAD){
+        const sh=parseFloat(m.support.HAD.hSupportRate)||0, sd=parseFloat(m.support.HAD.dSupportRate)||0, sa=parseFloat(m.support.HAD.aSupportRate)||0, ss=sh+sd+sa;
+        if(ss>0) supProbs={h:sh/ss,d:sd/ss,a:sa/ss};
+      }
+      const mi=D.matchInfo[m.id]||{};
+      const miA=miAdj(mi);
+      const wI=supProbs?0.6:1.0, wS=supProbs?0.4:0;
+      let cw=oW*wI+(supProbs?supProbs.h*wS:0)+miA.adjW, cd=oD*wI+(supProbs?supProbs.d*wS:0), ca=oA*wI+(supProbs?supProbs.a*wS:0)+miA.adjA;
+      cw=Math.max(0.01,cw); cd=Math.max(0.01,cd); ca=Math.max(0.01,ca);
+      const tot=cw+cd+ca; cw/=tot; cd/=tot; ca/=tot;
+      const sup=m.support&&m.support.HAD?m.support.HAD:null;
+      const w=(cw*100).toFixed(0), d=(cd*100).toFixed(0), l=(ca*100).toFixed(0);
+      let choice= w>=d&&w>=l?'主胜': l>=d?'客胜':'平';
+      const conf=Math.max(w,d,l); const confLv=conf>=55?'高':conf>=40?'中':'低';
+      body.innerHTML=`<div class="card"><div class="sec">⚡ 自动分析 · ${esc(home)} vs ${esc(away)}</div>
+        <div style="font-size:12px;color:var(--sub);margin-bottom:8px">已自动基于赔率${sup?'+投注资金占比':''}计算${miA.has?' · 含补充信息':''}${m.channel?(' · '+esc(m.channel)):''}</div>
+        <div class="hbar"><i style="width:${w}%;background:var(--red)"></i><i style="width:${d}%;background:#d0a500"></i><i style="width:${l}%;background:var(--blue)"></i></div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:10px"><span style="color:var(--red)">主胜 ${w}%</span><span style="color:#8a6d00">平 ${d}%</span><span style="color:var(--blue)">客胜 ${l}%</span></div>
+        <div class="pick pred" style="margin:0 auto 10px;display:flex;justify-content:center">🎯 倾向：<b>${choice}</b> <span class="badge">信心：${confLv}</span></div>
+        ${miA.factors.length?`<div class="sec" style="margin-top:4px">🔍 关键因素</div>${miA.factors.map(f=>`<div class="stat"><span>• ${f.t}</span><b style="color:${f.dir==='主胜'?'var(--red)':f.dir==='客胜'?'var(--blue)':'#8a6d00'}">→ ${f.dir}</b></div>`).join('')}`:''}
+        ${sup?`<div class="stat"><span>投注占比</span><b>主${sup.hSupportRate} / 平${sup.dSupportRate} / 客${sup.aSupportRate}</b></div>`:''}
+        <button class="btn" style="margin-top:10px" onclick="saveThisPred('${esc(m.id)}','${choice}')">✅ 保存此预测用于回测</button>
+        <div class="row" style="gap:6px;margin-top:8px">
+          <button class="btn ghost" style="flex:1" onclick="editRecent('${esc(home)}','${esc(away)}')">📈 补近期数据增强</button>
+          <button class="btn ghost" style="flex:1" onclick="editInfo('${m.id}')">📝 补信息</button>
+        </div>
+        <div class="hint">已自动分析完成。补充"近期数据/伤停/xG"可让模型更准（可选）。</div>
+      </div>`;
+      return;
+    }
+    // 无赔率也无近期数据 → 引导补基础数据
+    body.innerHTML=`<div class="card"><div class="sec">${esc(home)} vs ${esc(away)}</div><div class="list-empty">该场无赔率也无近期数据。<br>请先"📝 补信息"填写赔率与两队信息，即可自动分析。</div>
+      <button class="btn ghost" onclick="editInfo('${m?m.id:''}')">📝 补信息</button>
+      <button class="btn ghost" onclick="editRecent('${esc(home)}','${esc(away)}')">📈 补近期数据</button></div>`;
     return;
   }
   // ===== 近期状态概率 =====
