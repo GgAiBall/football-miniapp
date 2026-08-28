@@ -223,12 +223,13 @@ input[readonly]{background:#eef2ee;color:#555}
 <script>
 /* ============ 数据层 localStorage ============ */
 const D = {
-  matches: [],   // 记录库
-  teamStats: {}, // 手动近期战绩 {team:[{opp,home,gf,ga,rs,date}]} rs:H/D/A
-  pred: {},      // matchId -> {homeWin,draw,awayWin,choice}
-  result: {}     // matchId -> {score,rs} 赛果
+  matches: [],     // 记录库
+  teamStats: {},   // 手动近期战绩 {team:[{opp,home,gf,ga,rs,date}]} rs:H/D/A
+  pred: {},        // matchId -> {choice,win,draw,lose,at}
+  result: {},      // matchId -> {score,rs} 赛果
+  matchInfo: {}    // matchId -> {channel,injuryH,injuryA,xgH,xgA,handicap,water,note,view}
 };
-const LS_KEY = 'fm_data_v1';
+const LS_KEY = 'fm_data_v2';
 function load(){ try{ const raw=localStorage.getItem(LS_KEY); if(raw){ const o=JSON.parse(raw); Object.assign(D,o);} }catch(e){} }
 function save(){ localStorage.setItem(LS_KEY, JSON.stringify(D)); }
 load();
@@ -702,17 +703,22 @@ function openAddForm(home,away){
   const sel=D.newMatchId||'';
   body.innerHTML=`
     <div style="font-size:17px;font-weight:700;margin-bottom:12px">📝 新增比赛</div>
+    <div class="field"><label>渠道</label>
+      <select id="fChannel" style="width:100%;padding:9px;border:1px solid var(--line);border-radius:8px;font-size:14px">
+        <option>竞彩</option><option>北单</option><option>其他</option>
+      </select>
+    </div>
     <div class="field"><label>联赛</label><input id="fLeague" placeholder="如 英超 / 日职"></div>
     <div class="field"><label>主队</label><input id="fHome" value="${esc(home||'')}"></div>
     <div class="field"><label>客队</label><input id="fAway" value="${esc(away||'')}"></div>
     <div class="field"><label>开赛时间</label><input id="fTime" placeholder="如 2026-08-28 19:35"></div>
-    <div class="field"><label>欧赔 主胜/平/客胜（可选，填胜平负赔率）</label><div class="row"><input id="fW" style="flex:1" placeholder="主胜"><input id="fD" style="flex:1" placeholder="平"><input id="fA" style="flex:1" placeholder="客胜"></div></div>
+    <div class="field"><label>欧赔 主胜/平/客胜（可选）</label><div class="row"><input id="fW" style="flex:1" placeholder="主胜"><input id="fD" style="flex:1" placeholder="平"><input id="fA" style="flex:1" placeholder="客胜"></div></div>
     <div class="field"><label>让球数（可选）</label><input id="fHc" placeholder="如 -1 / 0 / +1"></div>
     <div class="row" style="gap:8px;margin-top:8px">
       <button class="btn" onclick="saveManual()">保存</button>
       <button class="btn ghost" onclick="closeModal()">取消</button>
     </div>
-    <div class="hint">保存后可进入"分析"页为该队补充近期战绩数据，用于更准确的分析。</div>
+    <div class="hint">保存后建议点"📝 补信息"录入伤停/xG/盘口等补充信息，再点"🔮 预测"生成分析预测。</div>
   `;
   showModal();
 }
@@ -723,10 +729,11 @@ function saveManual(){
   // 去重
   const id='m'+Date.now();
   D.matches.unshift({
-    id, league:$('fLeague').value.trim(), home, away, time:$('fTime').value.trim(),
+    id, channel:$('fChannel')?$('fChannel').value:'竞彩', league:$('fLeague').value.trim(), home, away, time:$('fTime').value.trim(),
     win:parseFloat($('fW').value)||0, draw:parseFloat($('fD').value)||0, lose:parseFloat($('fA').value)||0,
     handicap:parseFloat($('fHc').value)||0, created:Date.now(), manual:true
   });
+  D.matchInfo[id]=D.matchInfo[id]||{channel:$('fChannel')?$('fChannel').value:'竞彩'};
   save(); renderRecordList(); closeModal(); toast('✅ 已保存');
   // 提示补充近期数据
   setTimeout(()=>{ ensureTeam(home); ensureTeam(away); },200);
@@ -740,14 +747,16 @@ function renderRecordList(){
     const p=D.pred[m.id], r=D.result[m.id];
     const phit = (p&&r)? (p.choice===r.rs?'<span class="tagp tp-h">命中</span>':'<span class="tagp tp-w">未中</span>') :'';
     return `<div class="match">
-      <div class="top"><span class="lg">${esc(m.league)||'手工'}</span><span>${esc(m.time||'')}</span><span onclick="delMatch('${m.id}')" style="color:#c66;cursor:pointer">删除</span></div>
+      <div class="top">${m.channel?`<span class="badge">${esc(m.channel)}</span>`:''}<span class="lg">${esc(m.league)||'手工'}</span><span>${esc(m.time||'')}</span><span onclick="delMatch('${m.id}')" style="color:#c66;cursor:pointer">删除</span></div>
       <div class="tm"><span class="h">${esc(m.home)}</span><span class="dash">vs</span><span class="a">${esc(m.away)}</span>${m.manual?'<span class="badge">手工</span>':''}</div>
-      <div class="row" style="gap:6px;margin-top:6px">
-        <button class="btn ghost" style="flex:1;padding:8px" onclick="quickAnalyze('${m.id}')">📊 分析</button>
-        <button class="btn ghost" style="flex:1;padding:8px" onclick="editRecent('${m.home}','${m.away}')">📈 近期数据</button>
-        <button class="btn ghost" style="flex:1;padding:8px" onclick="markResultMan('${m.id}')">🔁 录赛果</button>
+      <div class="row" style="gap:6px;margin-top:6px;flex-wrap:wrap">
+        <button class="btn ghost" style="flex:1;padding:8px;min-width:30%" onclick="quickAnalyze('${m.id}')">🔮 预测分析</button>
+        <button class="btn ghost" style="flex:1;padding:8px;min-width:30%" onclick="editInfo('${m.id}')">📝 补信息</button>
+        <button class="btn ghost" style="flex:1;padding:8px;min-width:30%" onclick="editRecent('${m.home}','${m.away}')">📈 近期数据</button>
+        <button class="btn ghost" style="flex:1;padding:8px;min-width:30%" onclick="markResultMan('${m.id}')">🔁 录赛果</button>
       </div>
-      ${p||r?`<div style="margin-top:8px;font-size:12px">
+      ${infoBrief(m.id)?`<div style="margin-top:6px;font-size:11px;color:var(--sub)">${infoBrief(m.id)}</div>`:''}
+      ${p||r?`<div style="margin-top:6px;font-size:12px">
         ${p?'预测：<b>'+({H:'主胜',D:'平',A:'客胜'}[p.choice])+'</b> ':''}
         ${r?'赛果：<b>'+esc(r.score)+'</b> '+phit:''}
       </div>`:''}
@@ -774,6 +783,57 @@ function saveResultMan(id){
   if(p){ const hit=p.choice===rs; m.hit=hit; toast(hit?'🎯 命中':'❌ 未命中'); }
   else toast('✅ 赛果已保存');
   save(); renderRecordList(); renderBacktest(); closeModal();
+}
+
+/* ============ 补充信息 ============ */
+function infoBrief(id){
+  const mi=D.matchInfo[id]; if(!mi) return '';
+  const parts=[];
+  if(mi.channel) parts.push('渠道:'+mi.channel);
+  if(mi.injuryH||mi.injuryA) parts.push('伤停');
+  if(mi.xgH||mi.xgA) parts.push('xG');
+  if(mi.handicap||mi.water) parts.push('盘口水位');
+  if(mi.note) parts.push('战意/背景');
+  if(mi.view) parts.push('我的分析');
+  return parts.length?('已补充：'+parts.join(' · ')):'';
+}
+function editInfo(id){
+  const m=D.matches.find(x=>x.id===id); if(!m) return;
+  D.matchInfo[id]=D.matchInfo[id]||{};
+  const mi=D.matchInfo[id];
+  const body=$('modalBody');
+  body.innerHTML=`
+    <div style="font-size:17px;font-weight:700;margin-bottom:6px">📝 补充信息</div>
+    <div style="font-size:13px;margin-bottom:10px">${esc(m.home)} <b style="color:var(--gold)">vs</b> ${esc(m.away)}</div>
+    <div class="field"><label>渠道</label>
+      <select id="iChannel" style="width:100%;padding:9px;border:1px solid var(--line);border-radius:8px;font-size:14px">
+        <option ${(mi.channel||m.channel||'竞彩')==='竞彩'?'selected':''}>竞彩</option>
+        <option ${(mi.channel||m.channel||'竞彩')==='北单'?'selected':''}>北单</option>
+        <option ${(mi.channel||m.channel||'竞彩')==='其他'?'selected':''}>其他</option>
+      </select>
+    </div>
+    <div class="field"><label>主队伤停 / 缺阵（${esc(m.home)}）</label><textarea id="iInjuryH" rows="2" placeholder="如：主力前锋+后腰停赛">${esc(mi.injuryH||'')}</textarea></div>
+    <div class="field"><label>客队伤停 / 缺阵（${esc(m.away)}）</label><textarea id="iInjuryA" rows="2" placeholder="如：门将伤缺">${esc(mi.injuryA||'')}</textarea></div>
+    <div class="field"><label>xG 进攻实力（预期进球能力，0-3）</label><div class="row"><input id="iXgH" style="flex:1" placeholder="主队 xG" value="${esc(mi.xgH||'')}"><input id="iXgA" style="flex:1" placeholder="客队 xG" value="${esc(mi.xgA||'')}"></div></div>
+    <div class="field"><label>盘口 + 水位（让球盘/水位）</label><input id="iHandicap" placeholder="如：主让半一 0.90" value="${esc(mi.handicap||'')}"></div>
+    <div class="field"><label>战意 / 背景（德比、争冠、保级…）</label><textarea id="iNote" rows="2" placeholder="如：争冠关键战">${esc(mi.note||'')}</textarea></div>
+    <div class="field"><label>我的看法 / 依据</label><textarea id="iView" rows="3" placeholder="写下你的判断依据、看好的方向">${esc(mi.view||'')}</textarea></div>
+    <div class="row" style="gap:8px"><button class="btn" onclick="saveInfo('${id}')">保存</button><button class="btn ghost" onclick="closeModal()">取消</button></div>
+    <div class="hint">补充越多，"🔮 预测分析"越准。保存后记得再点"🔮 预测分析"生成结果。</div>
+  `;
+  showModal();
+}
+function saveInfo(id){
+  D.matchInfo[id]={
+    channel:$('iChannel').value,
+    injuryH:$('iInjuryH').value.trim(), injuryA:$('iInjuryA').value.trim(),
+    xgH:parseFloat($('iXgH').value)||0, xgA:parseFloat($('iXgA').value)||0,
+    handicap:$('iHandicap').value.trim(),
+    note:$('iNote').value.trim(),
+    view:$('iView').value.trim()
+  };
+  const m=D.matches.find(x=>x.id===id); if(m) m.channel=D.matchInfo[id].channel;
+  save(); renderRecordList(); closeModal(); toast('✅ 补充信息已保存');
 }
 
 /* ============ 近期数据/分析 ============ */
@@ -847,6 +907,25 @@ function teamScore(team,isHome){
     form:rec.slice(-5).map(x=>x.rs)
   };
 }
+function miAdj(mi){
+  if(!mi) return {adjW:0,adjA:0,factors:[],has:false};
+  let adjW=0,adjA=0; const factors=[];
+  const hInj=(mi.injuryH||'').length, aInj=(mi.injuryA||'').length;
+  if(hInj||aInj){
+    const d=hInj-aInj, adj=Math.max(-0.12,Math.min(0.12,d*0.012));
+    if(adj>0.012){ adjW-=adj; factors.push({t:'主队伤停缺阵描述更多，主队实力受损',dir:'客胜'}); }
+    else if(adj<-0.012){ adjA-=(-adj); factors.push({t:'客队伤停缺阵描述更多，客队实力受损',dir:'主胜'}); }
+  }
+  if(mi.xgH>0 && mi.xgA>0 && mi.xgH!==mi.xgA){
+    const diff=mi.xgH-mi.xgA, adj=Math.max(-0.12,Math.min(0.12,diff*0.05));
+    if(adj>0){ adjW+=adj; factors.push({t:'主队xG进攻强于客队',dir:'主胜'}); }
+    else { adjA+=(-adj); factors.push({t:'客队xG进攻强于主队',dir:'客胜'}); }
+  }
+  const hc=mi.handicap||'';
+  if(/主(让|-|受让)?[\d.]+/.test(hc)){ adjW+=0.04; factors.push({t:'盘口/赔率倾向主队（'+(hc||'')+'）',dir:'主胜'}); }
+  else if(/客(让|[-\d])/.test(hc)){ adjA+=0.04; factors.push({t:'盘口/赔率倾向客队（'+(hc||'')+'）',dir:'客胜'}); }
+  return {adjW,adjA,factors,has:true};
+}
 function renderAnalyze(home,away,m){
   const hs=teamScore(home,true), as=teamScore(away,false);
   const body=$('teamRecent');
@@ -870,19 +949,25 @@ function renderAnalyze(home,away,m){
     oW=1/m.win; oD=1/(m.draw||((m.win+m.lose)/2)); oA=1/m.lose;
     const s=oW+oD+oA; oW/=s; oD/=s; oA/=s;
   } else { oW=oD=oA=1/3; }
-  // ===== 融合 = 状态55% + 赔率45% =====
-  let cw=sW*0.55+oW*0.45, cd=sD*0.55+oD*0.45, ca=sA*0.55+oA*0.45;
-  const tot=cw+cd+ca; cw/=tot; cd/=tot; ca/=tot;
+  // ===== 补充信息修正(伤停/xG/盘口) =====
+  const mi=D.matchInfo[m&&m.id]||{};
+  const miA=miAdj(mi);
+  // ===== 融合 = 状态45% + 赔率35% + 补充信息修正 =====
+  let cw=sW*0.45+oW*0.35+miA.adjW, cd=sD*0.45+oD*0.35, ca=sA*0.45+oA*0.35+miA.adjA;
+  cw=Math.max(0,cw); cd=Math.max(0,cd); ca=Math.max(0,ca);
+  const tot=cw+cd+ca||1; cw/=tot; cd/=tot; ca/=tot;
   const w=(cw*100).toFixed(0), d=(cd*100).toFixed(0), l=(ca*100).toFixed(0);
   let choice= w>=d&&w>=l?'主胜': l>=d?'客胜':'平';
   let conf = Math.max(w,d,l)*1;
+  if(miA.factors.length) conf=Math.min(conf+8,90);
   const confLv = conf>=55?'高':conf>=40?'中':'低';
   body.innerHTML=`
     <div class="card"><div class="sec">分析结果 · ${esc(home)} vs ${esc(away)}</div>
-      <div style="font-size:13px;color:var(--sub);margin-bottom:8px">${m&&m.league?'['+esc(m.league)+'] ':''}基于近期${hs.n}/${as.n}场战绩统计 ${(m&&m.win&&'· 参考实时赔率')||''}</div>
+      <div style="font-size:13px;color:var(--sub);margin-bottom:8px">${m&&m.league?'['+esc(m.league)+'] ':''}${m&&m.channel?'['+esc(m.channel)+'] ':''}基于近期${hs.n}/${as.n}场战绩${(m&&m.win&&' · 实时赔率')||''}${miA.has?' · 含补充信息':''}</div>
       <div class="hbar"><i style="width:${w}%;background:var(--red)"></i><i style="width:${d}%;background:#d0a500"></i><i style="width:${l}%;background:var(--blue)"></i></div>
       <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:10px"><span style="color:var(--red)">主胜 ${w}%</span><span style="color:#8a6d00">平 ${d}%</span><span style="color:var(--blue)">客胜 ${l}%</span></div>
       <div class="pick pred" style="margin:0 auto 10px;display:flex;justify-content:center">🎯 倾向：<b>${choice}</b> <span class="badge">信心：${confLv}</span></div>
+      ${miA.factors.length?`<div class="sec" style="margin-top:4px">🔍 关键因素（依据补充信息与近期数据）</div>${miA.factors.map(f=>`<div class="stat"><span>• ${f.t}</span><b style="color:${f.dir==='主胜'?'var(--red)':f.dir==='客胜'?'var(--blue)':'#8a6d00'}">→ ${f.dir}</b></div>`).join('')}`:''}
       <div class="sec">数据对比</div>
       <div class="stat"><span>${esc(home)} 场均进/失</span><b>${hs.gf.toFixed(1)} / ${hs.ga.toFixed(1)}</b></div>
       <div class="stat"><span>${esc(away)} 场均进/失</span><b>${as.gf.toFixed(1)} / ${as.ga.toFixed(1)}</b></div>
@@ -890,6 +975,14 @@ function renderAnalyze(home,away,m){
       <div class="stat"><span>${esc(away)} 负率</span><b>${(as.loseP*100).toFixed(0)}%</b></div>
       <button class="btn" style="margin-top:10px" onclick="saveThisPred('${esc(m?m.id:'')}','${choice}')">✅ 保存此预测用于回测</button>
     </div>
+    ${miA.has?`<div class="card"><div class="sec">📝 补充信息</div>
+      ${mi.injuryH?`<div class="stat"><span>${esc(home)} 伤停/缺阵</span><b>${esc(mi.injuryH)}</b></div>`:''}
+      ${mi.injuryA?`<div class="stat"><span>${esc(away)} 伤停/缺阵</span><b>${esc(mi.injuryA)}</b></div>`:''}
+      ${mi.xgH||mi.xgA?`<div class="stat"><span>xG 进攻实力</span><b>主 ${mi.xgH||'-'} / 客 ${mi.xgA||'-'}</b></div>`:''}
+      ${mi.handicap?`<div class="stat"><span>盘口 / 水位</span><b>${esc(mi.handicap)}</b></div>`:''}
+      ${mi.note?`<div class="stat"><span>战意 / 背景</span><b>${esc(mi.note)}</b></div>`:''}
+      ${mi.view?`<div class="stat"><span>我的看法</span><b>${esc(mi.view)}</b></div>`:''}
+    </div>`:''}
     <div class="card"><div class="sec">两队近期</div>
       ${['home','away'].map(k=>{const t=k==='home'?home:away, ss=k==='home'?hs:as;
         return `<div style="margin-bottom:8px"><b>${esc(t)}</b>：<span style="font-size:12px;color:var(--sub)">${ss.form.map(x=>({H:'胜',D:'平',A:'负'}[x])).join(' ')}</span></div>`;}).join('')}
